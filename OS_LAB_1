@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <memory.h>
+
+void WritingFile(char *Chars, int File)
+{
+  if (File != -1)
+  {
+    while(*Chars != '\0')
+    {
+      write(File, Chars, sizeof(char));
+      Chars=Chars+1;
+    }
+  }
+ 
+ close(File);
+
+}
+
+int main()
+{
+  pid_t child_pid;
+  child_pid = fork();
+
+  char *str1 = (char *)malloc(50);
+  char *str2 = (char *)malloc(50);
+
+   
+
+  switch(child_pid)
+  {
+    case -1:
+      perror("fork");
+      break;
+   
+    case 0:
+      printf("This is child's process...\n");
+      sprintf(str1, "./file_%d.txt", getpid());
+
+      int fdest = open (str1, O_WRONLY|O_CREAT);
+
+      char *a = (char *)malloc(25);
+
+      sprintf(a, "parentspid pid = %d", getppid());
+
+      WritingFile(a,fdest);
+      printf("The end of child \n");
+      break;
+
+      default:
+          printf("This is parent process...\n");
+          printf("%d \n", getpid());
+          
+          sprintf(str2, "./file_%d.txt", getpid());
+
+          int sdest = open (str2, O_WRONLY|O_CREAT);
+          
+          char *b = (char *)malloc(30);
+
+          sprintf(b, "My pid = %d, child's pid = %d",getpid(), child_pid);
+          WritingFile(b,sdest);
+          
+          wait(NULL);
+
+          printf("The End\n");
+              
+          break;
+
+
+  }
+}
