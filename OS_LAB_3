@@ -1,0 +1,136 @@
+#include <pthread.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdbool.h>
+
+pthread_t barman, firstDude, secondDude, thirdDude;
+pthread_mutex_t fridge;
+
+int bottleInFridge = 10;
+int visit[3][3];
+int stage = 0;
+bool barmanIsBusy = 0;
+
+void *barmanOps(){
+    pthread_mutex_init(&fridge, NULL);
+    srand((unsigned int)time(NULL));
+    
+    while(1){
+        if(rand()%25 + 1 == 1){
+            barmanIsBusy = 1;
+            pthread_mutex_init(&fridge, NULL);
+            pthread_mutex_lock(&fridge);
+            sleep(30);
+            pthread_mutex_unlock(&fridge);
+            bottleInFridge+=3;
+            barmanIsBusy = 0;
+        }
+        sleep(1);
+    }
+}
+
+void *firstDudeOps(){
+    while(1)
+    {
+        visit[1][1] = 1;
+        pthread_mutex_lock(&fridge);
+        visit[1][1] = 2;
+        sleep(5);
+        if(!barmanIsBusy){
+            pthread_mutex_unlock(&fridge);
+        }
+        visit[1][1] = 3;
+        sleep(20);
+        bottleInFridge--;
+        visit[1][2]++;
+        if(visit[1][2] == 10){
+            visit[1][1] = 4;
+            sleep(120);
+        }
+    }
+}
+void *secondDudeOps(){
+    while(1)
+    {
+        visit[2][1] = 1;
+        pthread_mutex_lock(&fridge);
+        visit[2][1] = 2;
+        sleep(5);
+        if(!barmanIsBusy){
+            pthread_mutex_unlock(&fridge);
+        }
+        visit[2][1] = 3;
+        sleep(20);
+        bottleInFridge--;
+        visit[2][2]++;
+        if(visit[2][2] == 10){
+            visit[2][1] = 4;
+            sleep(120);
+        }
+    }
+}
+void *thirdDudeOps(){
+    while(1)
+    {
+        visit[3][1] = 1;
+        pthread_mutex_lock(&fridge);
+        visit[3][1] = 2;
+        sleep(5);
+        if(!barmanIsBusy){
+            pthread_mutex_unlock(&fridge);
+        }
+        visit[3][1] = 3;
+        sleep(20);
+        bottleInFridge--;
+        visit[3][2]++;
+        if(visit[3][2] == 10){
+            visit[3][1] = 4;
+            sleep(120);
+        }
+    }
+}
+
+int main(){
+
+    pthread_create(&barman, NULL, barmanOps, NULL);
+    pthread_create(&firstDude, NULL, firstDudeOps, NULL);
+    pthread_create(&secondDude, NULL, secondDudeOps , NULL);
+    pthread_create(&thirdDude, NULL, thirdDudeOps, NULL);
+    visit[1][2] = 0;
+    visit[2][2] = 0;
+    visit[3][2] = 0;
+    
+    while(1)
+    {
+        stage++;
+        printf("===STAGE %d===\n", stage);
+        for(int i=1; i<=3; i++)
+        {
+            sleep(2);
+            if(i==1)printf("First Guy ");
+            if(i==2)printf("Second Guy ");
+            if(i==3)printf("Third Guy ");
+        
+            printf("drank %d bottles. \nHe ", visit[i][2]);
+            if(visit[i][1]==1) printf("standing in line to fridge.");
+            if(visit[i][1]==2) printf("takes a bottle of beer.");
+            if(visit[i][1]==3) printf("is drinking beer.");
+            if(visit[i][1]==4) printf("sleeps.");
+            printf("\n\n");
+        }
+        if(!barmanIsBusy) printf("Barman is putting 3 new bootle\n");
+        if(barmanIsBusy) printf("Barman is busy, wait\n\n");
+        printf("Bottles in the fridge = %d\n", bottleInFridge);
+        sleep(1);
+        printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+        
+      
+        if(bottleInFridge == 0){
+            printf("The party is over, lads! Go home!");
+            sleep(60);
+        }
+            
+    }
+      return 0;
+}
